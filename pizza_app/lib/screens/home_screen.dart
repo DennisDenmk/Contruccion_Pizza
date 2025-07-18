@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
+
 import '../providers/auth_provider.dart';
 import '../providers/permission_provider.dart';
+
 import 'pizza_list_screen.dart';
 import 'ingredient_list_screen.dart';
 import 'rol_list_screen.dart';
@@ -17,37 +19,38 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  bool _initialized = false;
   bool _isLoading = true;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    if (_initialized) return;
+    _initialized = true;
+
     _loadUserFunctions();
   }
 
   Future<void> _loadUserFunctions() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final permissionProvider = Provider.of<PermissionProvider>(context, listen: false);
-    
+    final client = GraphQLProvider.of(context).value;
+
     if (authProvider.userId != null) {
-      final client = GraphQLProvider.of(context).value;
       await permissionProvider.loadUserFunctions(client, authProvider.userId!);
     }
-    
+
     if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final permissionProvider = Provider.of<PermissionProvider>(context);
-    final authProvider = Provider.of<AuthProvider>(context);
-    
-    print('DEBUG: Estado actual - userId: ${authProvider.userId}, funciones: ${permissionProvider.userFunctionIds}');
-    
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Pizza App'),
@@ -55,96 +58,86 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () {
-              Provider.of<AuthProvider>(context, listen: false).logout();
+              authProvider.logout();
             },
           ),
         ],
       ),
-      body: _isLoading 
-        ? const Center(child: CircularProgressIndicator())
-        : Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: permissionProvider.userFunctionIds.isEmpty
-              ? const Center(
-                  child: Text(
-                    'No tienes permisos asignados. Contacta al administrador.',
-                    style: TextStyle(fontSize: 18),
-                    textAlign: TextAlign.center,
-                  ),
-                )
-              : SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const SizedBox(height: 20),
-                      if (permissionProvider.hasFunction(PermissionProvider.PIZZAS))
-                        _buildMenuCard(
-                          context,
-                          'Gestión de Pizzas',
-                          Icons.local_pizza,
-                          Colors.red.shade700,
-                          () => Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const PizzaListScreen()),
-                          ),
-                        ),
-                      const SizedBox(height: 16),
-                      if (permissionProvider.hasFunction(PermissionProvider.INGREDIENTES))
-                        _buildMenuCard(
-                          context,
-                          'Gestión de Ingredientes',
-                          Icons.restaurant,
-                          Colors.green.shade700,
-                          () => Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const IngredientListScreen()),
-                          ),
-                        ),
-                      const SizedBox(height: 16),
-                      if (permissionProvider.hasFunction(PermissionProvider.USUARIOS))
-                        _buildMenuCard(
-                          context,
-                          'Gestión de Usuarios',
-                          Icons.people,
-                          Colors.blue.shade700,
-                          () => Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const UsuarioListScreen()),
-                          ),
-                        ),
-                      const SizedBox(height: 16),
-                      if (permissionProvider.hasFunction(PermissionProvider.ROLES))
-                        _buildMenuCard(
-                          context,
-                          'Gestión de Roles',
-                          Icons.admin_panel_settings,
-                          Colors.purple.shade700,
-                          () => Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const RolListScreen()),
-                          ),
-                        ),
-                      const SizedBox(height: 16),
-                      if (permissionProvider.hasFunction(PermissionProvider.FUNCIONES))
-                        _buildMenuCard(
-                          context,
-                          'Gestión de Funciones',
-                          Icons.functions,
-                          Colors.orange.shade700,
-                          () => Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const FuncionListScreen()),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-          ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: permissionProvider.userFunctionIds.isEmpty
+                  ? const Center(
+                      child: Text(
+                        'No tienes permisos asignados. Contacta al administrador.',
+                        style: TextStyle(fontSize: 18),
+                        textAlign: TextAlign.center,
+                      ),
+                    )
+                  : SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const SizedBox(height: 20),
+                          if (permissionProvider.hasFunction(PermissionProvider.PIZZAS))
+                            _buildMenuCard(
+                              'Gestión de Pizzas',
+                              Icons.local_pizza,
+                              Colors.red.shade700,
+                              () => Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const PizzaListScreen()),
+                              ),
+                            ),
+                          if (permissionProvider.hasFunction(PermissionProvider.INGREDIENTES))
+                            _buildMenuCard(
+                              'Gestión de Ingredientes',
+                              Icons.restaurant,
+                              Colors.green.shade700,
+                              () => Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const IngredientListScreen()),
+                              ),
+                            ),
+                          if (permissionProvider.hasFunction(PermissionProvider.USUARIOS))
+                            _buildMenuCard(
+                              'Gestión de Usuarios',
+                              Icons.people,
+                              Colors.blue.shade700,
+                              () => Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const UsuarioListScreen()),
+                              ),
+                            ),
+                          if (permissionProvider.hasFunction(PermissionProvider.ROLES))
+                            _buildMenuCard(
+                              'Gestión de Roles',
+                              Icons.admin_panel_settings,
+                              Colors.purple.shade700,
+                              () => Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const RolListScreen()),
+                              ),
+                            ),
+                          if (permissionProvider.hasFunction(PermissionProvider.FUNCIONES))
+                            _buildMenuCard(
+                              'Gestión de Funciones',
+                              Icons.functions,
+                              Colors.orange.shade700,
+                              () => Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const FuncionListScreen()),
+                              ),
+                            ),
+                        ].expand((widget) => [widget, const SizedBox(height: 16)]).toList(),
+                      ),
+                    ),
+            ),
     );
   }
 
   Widget _buildMenuCard(
-    BuildContext context,
     String title,
     IconData icon,
     Color color,

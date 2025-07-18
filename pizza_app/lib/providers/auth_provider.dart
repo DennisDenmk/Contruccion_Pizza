@@ -31,6 +31,7 @@ class AuthProvider with ChangeNotifier {
     _token = null;
     _userId = null;
     await storage.delete(key: 'auth_token');
+    print('DEBUG: Sesión cerrada');
     notifyListeners();
   }
 }
