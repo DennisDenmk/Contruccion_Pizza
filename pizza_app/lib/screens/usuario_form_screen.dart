@@ -122,7 +122,7 @@ class _UsuarioFormScreenState extends State<UsuarioFormScreen> {
                     _showSuccess(_isEditing
                         ? 'Usuario actualizado correctamente'
                         : 'Usuario creado correctamente');
-                    Navigator.pop(context);
+                    Navigator.pop(context, true);
                   },
                   onError: (error) {
                     setState(() => _isLoading = false);
@@ -172,7 +172,7 @@ class _UsuarioFormScreenState extends State<UsuarioFormScreen> {
                     document: gql(PizzaMutations.deleteUsuario),
                     onCompleted: (dynamic resultData) {
                       _showSuccess('Usuario eliminado correctamente');
-                      Navigator.pop(context);
+                      Navigator.pop(context, true);
                     },
                     onError: (error) {
                       _showError(error?.graphqlErrors.first.message ??

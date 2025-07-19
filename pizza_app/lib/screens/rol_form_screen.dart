@@ -112,7 +112,7 @@ class _RolFormScreenState extends State<RolFormScreen> {
                     _showSuccess(isEditing
                         ? 'Rol actualizado correctamente'
                         : 'Rol creado correctamente');
-                    Navigator.pop(context);
+                    Navigator.pop(context, true); // Devuelve true para indicar que se debe actualizar
                   },
                   onError: (error) {
                     setState(() => _isLoading = false);
@@ -156,7 +156,7 @@ class _RolFormScreenState extends State<RolFormScreen> {
                     document: gql(PizzaMutations.deleteRol),
                     onCompleted: (dynamic resultData) {
                       _showSuccess('Rol eliminado correctamente');
-                      Navigator.pop(context);
+                      Navigator.pop(context, true); // Devuelve true para indicar que se debe actualizar
                     },
                     onError: (error) {
                       _showError(error?.graphqlErrors.first.message ??

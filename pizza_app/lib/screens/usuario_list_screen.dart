@@ -2,11 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../graphql/queries.dart';
 import '../models/usuario.dart';
+import '../widgets/pizza_loading.dart';
 import 'usuario_form_screen.dart';
 import 'usuario_roles_screen.dart';
 
-class UsuarioListScreen extends StatelessWidget {
+class UsuarioListScreen extends StatefulWidget {
   const UsuarioListScreen({Key? key}) : super(key: key);
+
+  @override
+  State<UsuarioListScreen> createState() => _UsuarioListScreenState();
+}
+
+class _UsuarioListScreenState extends State<UsuarioListScreen> {
+  Function? _refetch;
 
   @override
   Widget build(BuildContext context) {
@@ -20,6 +28,9 @@ class UsuarioListScreen extends StatelessWidget {
           fetchPolicy: FetchPolicy.noCache,
         ),
         builder: (QueryResult result, {fetchMore, refetch}) {
+          // Guardar la función refetch para usarla más tarde
+          _refetch = refetch;
+          
           if (result.hasException) {
             return Center(
               child: Text(
@@ -30,7 +41,7 @@ class UsuarioListScreen extends StatelessWidget {
           }
 
           if (result.isLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: PizzaLoading());
           }
 
           final usuarios = (result.data?['usuarios'] as List<dynamic>?)
@@ -74,7 +85,12 @@ class UsuarioListScreen extends StatelessWidget {
                                   MaterialPageRoute(
                                     builder: (context) => UsuarioFormScreen(usuario: usuario),
                                   ),
-                                ).then((_) => refetch!());
+                                ).then((result) {
+                                  // Siempre actualizar al volver de editar
+                                  if (_refetch != null) {
+                                    _refetch!();
+                                  }
+                                });
                               },
                             ),
                             IconButton(
@@ -85,7 +101,12 @@ class UsuarioListScreen extends StatelessWidget {
                                   MaterialPageRoute(
                                     builder: (context) => UsuarioRolesScreen(usuario: usuario),
                                   ),
-                                ).then((_) => refetch!());
+                                ).then((result) {
+                                  // Siempre actualizar al volver de gestionar roles
+                                  if (_refetch != null) {
+                                    _refetch!();
+                                  }
+                                });
                               },
                             ),
                           ],
@@ -104,7 +125,11 @@ class UsuarioListScreen extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const UsuarioFormScreen()),
-          );
+          ).then((result) {
+            if (result == true && _refetch != null) {
+              _refetch!();
+            }
+          });
         },
         child: const Icon(Icons.add),
       ),

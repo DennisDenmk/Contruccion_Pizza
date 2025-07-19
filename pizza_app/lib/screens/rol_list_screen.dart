@@ -2,11 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../graphql/queries.dart';
 import '../models/rol.dart';
+import '../widgets/pizza_loading.dart';
 import 'rol_form_screen.dart';
 import 'rol_funciones_screen.dart';
 
-class RolListScreen extends StatelessWidget {
+class RolListScreen extends StatefulWidget {
   const RolListScreen({Key? key}) : super(key: key);
+
+  @override
+  State<RolListScreen> createState() => _RolListScreenState();
+}
+
+class _RolListScreenState extends State<RolListScreen> {
+  Function? _refetch;
 
   @override
   Widget build(BuildContext context) {
@@ -20,6 +28,9 @@ class RolListScreen extends StatelessWidget {
           fetchPolicy: FetchPolicy.noCache,
         ),
         builder: (QueryResult result, {fetchMore, refetch}) {
+          // Guardar la función refetch para usarla más tarde
+          _refetch = refetch;
+          
           if (result.hasException) {
             return Center(
               child: Text(
@@ -30,7 +41,7 @@ class RolListScreen extends StatelessWidget {
           }
 
           if (result.isLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: PizzaLoading());
           }
 
           final roles = (result.data?['roles'] as List<dynamic>?)
@@ -72,7 +83,12 @@ class RolListScreen extends StatelessWidget {
                                   MaterialPageRoute(
                                     builder: (context) => RolFormScreen(rol: rol),
                                   ),
-                                ).then((_) => refetch!());
+                                ).then((result) {
+                                  // Siempre actualizar al volver de editar
+                                  if (_refetch != null) {
+                                    _refetch!();
+                                  }
+                                });
                               },
                             ),
                             IconButton(
@@ -83,7 +99,12 @@ class RolListScreen extends StatelessWidget {
                                   MaterialPageRoute(
                                     builder: (context) => RolFuncionesScreen(rol: rol),
                                   ),
-                                ).then((_) => refetch!());
+                                ).then((result) {
+                                  // Siempre actualizar al volver de gestionar funciones
+                                  if (_refetch != null) {
+                                    _refetch!();
+                                  }
+                                });
                               },
                             ),
                           ],
@@ -102,7 +123,11 @@ class RolListScreen extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const RolFormScreen()),
-          );
+          ).then((result) {
+            if (result == true && _refetch != null) {
+              _refetch!();
+            }
+          });
         },
         child: const Icon(Icons.add),
       ),

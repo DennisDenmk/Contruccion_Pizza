@@ -4,12 +4,15 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 
 import '../providers/auth_provider.dart';
 import '../providers/permission_provider.dart';
+import '../widgets/animated_pizza_background.dart';
+import '../widgets/pizza_loading.dart';
 
 import 'pizza_list_screen.dart';
 import 'ingredient_list_screen.dart';
 import 'rol_list_screen.dart';
 import 'funcion_list_screen.dart';
 import 'usuario_list_screen.dart';
+import 'login_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -51,89 +54,97 @@ class _HomeScreenState extends State<HomeScreen> {
     final permissionProvider = Provider.of<PermissionProvider>(context);
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Pizza App'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
-              authProvider.logout();
-            },
-          ),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: permissionProvider.userFunctionIds.isEmpty
-                  ? const Center(
-                      child: Text(
-                        'No tienes permisos asignados. Contacta al administrador.',
-                        style: TextStyle(fontSize: 18),
-                        textAlign: TextAlign.center,
-                      ),
-                    )
-                  : SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const SizedBox(height: 20),
-                          if (permissionProvider.hasFunction(PermissionProvider.PIZZAS))
-                            _buildMenuCard(
-                              'Gestión de Pizzas',
-                              Icons.local_pizza,
-                              Colors.red.shade700,
-                              () => Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (_) => const PizzaListScreen()),
-                              ),
-                            ),
-                          if (permissionProvider.hasFunction(PermissionProvider.INGREDIENTES))
-                            _buildMenuCard(
-                              'Gestión de Ingredientes',
-                              Icons.restaurant,
-                              Colors.green.shade700,
-                              () => Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (_) => const IngredientListScreen()),
-                              ),
-                            ),
-                          if (permissionProvider.hasFunction(PermissionProvider.USUARIOS))
-                            _buildMenuCard(
-                              'Gestión de Usuarios',
-                              Icons.people,
-                              Colors.blue.shade700,
-                              () => Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (_) => const UsuarioListScreen()),
-                              ),
-                            ),
-                          if (permissionProvider.hasFunction(PermissionProvider.ROLES))
-                            _buildMenuCard(
-                              'Gestión de Roles',
-                              Icons.admin_panel_settings,
-                              Colors.purple.shade700,
-                              () => Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (_) => const RolListScreen()),
-                              ),
-                            ),
-                          if (permissionProvider.hasFunction(PermissionProvider.FUNCIONES))
-                            _buildMenuCard(
-                              'Gestión de Funciones',
-                              Icons.functions,
-                              Colors.orange.shade700,
-                              () => Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (_) => const FuncionListScreen()),
-                              ),
-                            ),
-                        ].expand((widget) => [widget, const SizedBox(height: 16)]).toList(),
-                      ),
-                    ),
+    return AnimatedPizzaBackground(
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Pizza App'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.logout),
+              onPressed: () async {
+                await authProvider.logout();
+                if (mounted) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const LoginScreen()),
+                  );
+                }
+              },
             ),
+          ],
+        ),
+        body: _isLoading
+            ? const Center(child: PizzaLoading())
+            : Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: permissionProvider.userFunctionIds.isEmpty
+                    ? const Center(
+                        child: Text(
+                          'No tienes permisos asignados. Contacta al administrador.',
+                          style: TextStyle(fontSize: 18),
+                          textAlign: TextAlign.center,
+                        ),
+                      )
+                    : SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const SizedBox(height: 20),
+                            if (permissionProvider.hasFunction(PermissionProvider.PIZZAS))
+                              _buildMenuCard(
+                                'Gestión de Pizzas',
+                                Icons.local_pizza,
+                                Colors.red.shade700,
+                                () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const PizzaListScreen()),
+                                ),
+                              ),
+                            if (permissionProvider.hasFunction(PermissionProvider.INGREDIENTES))
+                              _buildMenuCard(
+                                'Gestión de Ingredientes',
+                                Icons.restaurant,
+                                Colors.green.shade700,
+                                () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const IngredientListScreen()),
+                                ),
+                              ),
+                            if (permissionProvider.hasFunction(PermissionProvider.USUARIOS))
+                              _buildMenuCard(
+                                'Gestión de Usuarios',
+                                Icons.people,
+                                Colors.blue.shade700,
+                                () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const UsuarioListScreen()),
+                                ),
+                              ),
+                            if (permissionProvider.hasFunction(PermissionProvider.ROLES))
+                              _buildMenuCard(
+                                'Gestión de Roles',
+                                Icons.admin_panel_settings,
+                                Colors.purple.shade700,
+                                () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const RolListScreen()),
+                                ),
+                              ),
+                            if (permissionProvider.hasFunction(PermissionProvider.FUNCIONES))
+                              _buildMenuCard(
+                                'Gestión de Funciones',
+                                Icons.functions,
+                                Colors.orange.shade700,
+                                () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const FuncionListScreen()),
+                                ),
+                              ),
+                          ].expand((widget) => [widget, const SizedBox(height: 16)]).toList(),
+                        ),
+                      ),
+              ),
+      ),
     );
   }
 

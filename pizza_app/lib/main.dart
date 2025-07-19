@@ -5,6 +5,7 @@ import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'providers/auth_provider.dart';
 import 'providers/permission_provider.dart';
+import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -48,10 +49,7 @@ class MyApp extends StatelessWidget {
       client: client,
       child: MaterialApp(
         title: 'Pizza App',
-        theme: ThemeData(
-          primarySwatch: Colors.red,
-          visualDensity: VisualDensity.adaptivePlatformDensity,
-        ),
+        theme: AppTheme.lightTheme,
         home: authProvider.isAuthenticated ? const HomeScreen() : const LoginScreen(),
       ),
     );

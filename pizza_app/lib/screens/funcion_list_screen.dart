@@ -80,15 +80,7 @@ class FuncionListScreen extends StatelessWidget {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const FuncionFormScreen()),
-          );
-        },
-        child: const Icon(Icons.add),
-      ),
+      // Botón para crear nueva función eliminado
     );
   }
 }
