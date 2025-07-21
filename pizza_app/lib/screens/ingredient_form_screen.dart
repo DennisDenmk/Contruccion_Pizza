@@ -116,7 +116,7 @@ class _IngredientFormScreenState extends State<IngredientFormScreen> {
                     _showSuccess(isEditing
                         ? 'Ingrediente actualizado correctamente'
                         : 'Ingrediente creado correctamente');
-                    Navigator.pop(context, true); // Devuelve true al crear/editar
+                    Navigator.pop(context);
                   },
                   onError: (error) {
                     setState(() => _isLoading = false);
