@@ -12,7 +12,7 @@ class IngredientListScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Ingredientes'),
-      ),
+      ), // cambios
       body: Query(
         options: QueryOptions(
           document: gql(PizzaQueries.ingredients),
