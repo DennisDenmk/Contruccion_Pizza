@@ -1,5 +1,4 @@
 class PizzaMutations {
-  // Pizza Mutations
   static String get createPizza => '''
     mutation CreatePizza(\$piz_name: String!, \$piz_origin: String!, \$piz_state: Boolean!) {
       crearPizza(input: {piz_name: \$piz_name, piz_origin: \$piz_origin, piz_state: \$piz_state}) {
@@ -28,35 +27,6 @@ class PizzaMutations {
     }
   ''';
 
-  static String get createPizzaWithIngredients => '''
-    mutation CreatePizzaWithIngredients(\$piz_name: String!, \$piz_origin: String!, \$piz_state: Boolean!, \$ingredients: [PizzaIngredientInput!]!) {
-      createPizzaWithIngredients(piz_name: \$piz_name, piz_origin: \$piz_origin, piz_state: \$piz_state, ingredients: \$ingredients) {
-        piz_id
-        piz_name
-        piz_origin
-        piz_state
-      }
-    }
-  ''';
-
-  static String get updatePizzaWithIngredients => '''
-    mutation UpdatePizzaWithIngredients(\$piz_id: ID!, \$piz_name: String!, \$piz_origin: String!, \$piz_state: Boolean!, \$ingredients: [PizzaIngredientInput!]!) {
-      updatePizzaWithIngredients(piz_id: \$piz_id, piz_name: \$piz_name, piz_origin: \$piz_origin, piz_state: \$piz_state, ingredients: \$ingredients) {
-        piz_id
-        piz_name
-        piz_origin
-        piz_state
-      }
-    }
-  ''';
-
-  static String get deletePizzaWithRelations => '''
-    mutation DeletePizzaWithRelations(\$piz_id: ID!) {
-      deletePizzaWithRelations(piz_id: \$piz_id)
-    }
-  ''';
-
-  // Ingredient Mutations
   static String get createIngredient => '''
     mutation CreateIngredient(\$ing_name: String!, \$ing_calories: Float!, \$ing_state: Boolean!) {
       crearIngrediente(input: {ing_name: \$ing_name, ing_calories: \$ing_calories, ing_state: \$ing_state}) {
@@ -87,17 +57,21 @@ class PizzaMutations {
 
   static String get assignIngredientToPizza => '''
     mutation AssignIngredientToPizza(\$piz_id: ID!, \$ing_id: ID!, \$piz_ing_quantified: Float!) {
-      assignIngredientToPizza(piz_id: \$piz_id, ing_id: \$ing_id, piz_ing_quantified: \$piz_ing_quantified)
+      crearPizzaIngrediente(input: {piz_id: \$piz_id, ing_id: \$ing_id, piz_ing_quantified: \$piz_ing_quantified}) {
+        piz_id
+        ing_id
+        piz_ing_quantified
+      }
     }
   ''';
 
   static String get removeIngredientFromPizza => '''
     mutation RemoveIngredientFromPizza(\$piz_id: ID!, \$ing_id: ID!) {
-      removeIngredientFromPizza(piz_id: \$piz_id, ing_id: \$ing_id)
+      eliminarPizzaIngrediente(piz_id: \$piz_id, ing_id: \$ing_id)
     }
   ''';
-
-  // Rol Mutations
+  
+  // Rol mutations
   static String get createRol => '''
     mutation CreateRol(\$rol_name: String!, \$rol_description: String!, \$rol_state: Boolean!) {
       crearRol(input: {rol_name: \$rol_name, rol_description: \$rol_description, rol_state: \$rol_state}) {
@@ -108,13 +82,13 @@ class PizzaMutations {
       }
     }
   ''';
-
+  
   static String get assignFuncionToRol => '''
     mutation AssignFuncionToRol(\$rol_id: ID!, \$fun_id: ID!) {
       asignarFuncionARol(rol_id: \$rol_id, fun_id: \$fun_id)
     }
   ''';
-
+  
   static String get removeFuncionFromRol => '''
     mutation RemoveFuncionFromRol(\$rol_id: ID!, \$fun_id: ID!) {
       eliminarFuncionDeRol(rol_id: \$rol_id, fun_id: \$fun_id)
@@ -137,8 +111,8 @@ class PizzaMutations {
       eliminarRol(id: \$rol_id)
     }
   ''';
-
-  // Funcion Mutations
+  
+  // Funcion mutations
   static String get createFuncion => '''
     mutation CreateFuncion(\$fun_name: String!, \$fun_description: String!, \$fun_state: Boolean!) {
       crearFuncion(input: {fun_name: \$fun_name, fun_description: \$fun_description, fun_state: \$fun_state}) {
@@ -166,8 +140,8 @@ class PizzaMutations {
       eliminarFuncion(id: \$fun_id)
     }
   ''';
-
-  // Usuario Mutations
+  
+  // Usuario mutations
   static String get createUsuario => '''
     mutation CreateUsuario(\$nombre: String!, \$contrasenia: String!, \$estado: Boolean) {
       register(input: {nombre: \$nombre, contrasenia: \$contrasenia, estado: \$estado}) {
@@ -177,13 +151,13 @@ class PizzaMutations {
       }
     }
   ''';
-
+  
   static String get assignRolToUsuario => '''
     mutation AssignRolToUsuario(\$usu_id: ID!, \$rol_id: ID!) {
       asignarRolAUsuario(usu_id: \$usu_id, rol_id: \$rol_id)
     }
   ''';
-
+  
   static String get removeRolFromUsuario => '''
     mutation RemoveRolFromUsuario(\$usu_id: ID!, \$rol_id: ID!) {
       eliminarRolDeUsuario(usu_id: \$usu_id, rol_id: \$rol_id)
