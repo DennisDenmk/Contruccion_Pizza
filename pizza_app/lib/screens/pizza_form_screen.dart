@@ -112,7 +112,7 @@ class _PizzaFormScreenState extends State<PizzaFormScreen> {
                     _showSuccess(isEditing
                         ? 'Pizza actualizada correctamente'
                         : 'Pizza creada correctamente');
-                    Navigator.pop(context);
+                    Navigator.pop(context, true); // Changed to return true
                   },
                   onError: (error) {
                     setState(() => _isLoading = false);
@@ -156,7 +156,7 @@ class _PizzaFormScreenState extends State<PizzaFormScreen> {
                     document: gql(PizzaMutations.deletePizza),
                     onCompleted: (dynamic resultData) {
                       _showSuccess('Pizza eliminada correctamente');
-                      Navigator.pop(context);
+                      Navigator.pop(context, true); // Changed to return true
                     },
                     onError: (error) {
                       _showError(error?.graphqlErrors.first.message ??

@@ -17,9 +17,9 @@ class PizzaListScreen extends StatelessWidget {
       body: Query(
         options: QueryOptions(
           document: gql(PizzaQueries.pizzas),
-          fetchPolicy: FetchPolicy.noCache,
+          fetchPolicy: FetchPolicy.networkOnly, // Changed to ensure fresh data
         ),
-        builder: (QueryResult result, {fetchMore, refetch}) {
+        builder: (QueryResult result, {VoidCallback? refetch, FetchMore? fetchMore}) {
           if (result.hasException) {
             return Center(
               child: Text(
@@ -43,7 +43,8 @@ class PizzaListScreen extends StatelessWidget {
 
           return RefreshIndicator(
             onRefresh: () async {
-              await refetch!();
+              refetch?.call();
+              return;
             },
             child: ListView.builder(
               itemCount: pizzas.length,
@@ -69,7 +70,11 @@ class PizzaListScreen extends StatelessWidget {
                               MaterialPageRoute(
                                 builder: (context) => PizzaFormScreen(pizza: pizza),
                               ),
-                            ).then((_) => refetch!());
+                            ).then((value) {
+                              if (value == true) {
+                                refetch?.call();
+                              }
+                            });
                           },
                         ),
                       ],
@@ -94,7 +99,15 @@ class PizzaListScreen extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const PizzaFormScreen()),
-          );
+          ).then((value) {
+            if (value == true) {
+              final query = GraphQLProvider.of(context).value;
+              query.query(QueryOptions(
+                document: gql(PizzaQueries.pizzas),
+                fetchPolicy: FetchPolicy.networkOnly, // Changed to ensure fresh data
+              ));
+            }
+          });
         },
         child: const Icon(Icons.add),
       ),
