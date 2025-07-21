@@ -5,8 +5,15 @@ import '../models/pizza.dart';
 import 'pizza_form_screen.dart';
 import 'pizza_detail_screen.dart';
 
-class PizzaListScreen extends StatelessWidget {
+class PizzaListScreen extends StatefulWidget {
   const PizzaListScreen({Key? key}) : super(key: key);
+
+  @override
+  _PizzaListScreenState createState() => _PizzaListScreenState();
+}
+
+class _PizzaListScreenState extends State<PizzaListScreen> {
+  late Function? _refetch;
 
   @override
   Widget build(BuildContext context) {
@@ -20,6 +27,7 @@ class PizzaListScreen extends StatelessWidget {
           fetchPolicy: FetchPolicy.noCache,
         ),
         builder: (QueryResult result, {fetchMore, refetch}) {
+          _refetch = refetch;
           if (result.hasException) {
             return Center(
               child: Text(
@@ -43,7 +51,7 @@ class PizzaListScreen extends StatelessWidget {
 
           return RefreshIndicator(
             onRefresh: () async {
-              await refetch!();
+              if (_refetch != null) await _refetch!();
             },
             child: ListView.builder(
               itemCount: pizzas.length,
@@ -69,7 +77,9 @@ class PizzaListScreen extends StatelessWidget {
                               MaterialPageRoute(
                                 builder: (context) => PizzaFormScreen(pizza: pizza),
                               ),
-                            ).then((_) => refetch!());
+                            ).then((value) {
+                              if (value == true && _refetch != null) _refetch!();
+                            });
                           },
                         ),
                       ],
@@ -89,14 +99,20 @@ class PizzaListScreen extends StatelessWidget {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const PizzaFormScreen()),
+      floatingActionButton: Builder(
+        builder: (context) {
+          return FloatingActionButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const PizzaFormScreen()),
+              ).then((value) {
+                if (value == true && _refetch != null) _refetch!();
+              });
+            },
+            child: const Icon(Icons.add),
           );
         },
-        child: const Icon(Icons.add),
       ),
     );
   }

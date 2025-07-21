@@ -89,27 +89,35 @@ class PizzaDetailScreen extends StatelessWidget {
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
-                _buildIngredientsList(context, pizza.id),
+                _buildIngredientsList(context, pizzaId, refetch),
               ],
             ),
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _showAddIngredientDialog(context);
+      floatingActionButton: Builder(
+        builder: (context) {
+          return FloatingActionButton(
+            onPressed: () {
+              _showAddIngredientDialog(context);
+            },
+            child: const Icon(Icons.add),
+          );
         },
-        child: const Icon(Icons.add),
       ),
     );
   }
 
-  Widget _buildIngredientsList(BuildContext context, int pizzaId) {
+  Widget _buildIngredientsList(BuildContext context, int pizzaId, Function? refetch) {
+    // Si refetch es nulo, usamos una función vacía para evitar errores
+    refetch ??= () {};
+
     return Query(
       options: QueryOptions(
         document: gql(PizzaQueries.pizzaIngredientsByPizzaId),
+        variables: {'piz_id': pizzaId},
       ),
-      builder: (QueryResult result, {fetchMore, refetch}) {
+      builder: (QueryResult result, {fetchMore, refetch = null}) {
         if (result.hasException) {
           return Center(
             child: Text(
@@ -123,32 +131,10 @@ class PizzaDetailScreen extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
         
-        // Verificar si los datos existen
-        if (result.data == null || result.data!['pizzaIngredientes'] == null || result.data!['ingredientes'] == null) {
-          return const Card(
-            child: Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Text('No se pudieron cargar los ingredientes'),
-            ),
-          );
-        }
+        final pizzaIngredientes = result.data?['pizzaIngredientes'] as List<dynamic>? ?? [];
+        final ingredientes = result.data?['ingredientes'] as List<dynamic>? ?? [];
 
-        final pizzaIngredientes = result.data!['pizzaIngredientes'] as List<dynamic>;
-        final ingredientes = result.data!['ingredientes'] as List<dynamic>;
-        
-        // Filtrar los ingredientes de esta pizza
-        final pizzaIngredientesIds = pizzaIngredientes
-            .where((pi) => pi['piz_id'].toString() == pizzaId.toString())
-            .map((pi) => pi['ing_id'].toString())
-            .toList();
-            
-        final pizzaIngredientesMap = {for (var pi in pizzaIngredientes.where((pi) => pi['piz_id'].toString() == pizzaId.toString())) pi['ing_id'].toString(): pi};
-        
-        final ingredientesDePizza = ingredientes
-            .where((ing) => pizzaIngredientesIds.contains(ing['ing_id'].toString()))
-            .toList();
-
-        if (ingredientesDePizza.isEmpty) {
+        if (pizzaIngredientes.isEmpty) {
           return const Card(
             child: Padding(
               padding: EdgeInsets.all(16.0),
@@ -157,6 +143,13 @@ class PizzaDetailScreen extends StatelessWidget {
           );
         }
 
+        final pizzaIngredientesMap = {
+          for (var pi in pizzaIngredientes) pi['ing_id'].toString(): pi['piz_ing_quantified']
+        };
+
+        final ingredientesDePizza = ingredientes.where((ing) =>
+            pizzaIngredientesMap.containsKey(ing['ing_id'].toString())).toList();
+
         return ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -164,8 +157,7 @@ class PizzaDetailScreen extends StatelessWidget {
           itemBuilder: (context, index) {
             final item = ingredientesDePizza[index];
             final ingId = item['ing_id'].toString();
-            final pizzaIng = pizzaIngredientesMap[ingId];
-            final cantidad = pizzaIng != null ? pizzaIng['piz_ing_quantified'] : 'N/A';
+            final cantidad = pizzaIngredientesMap[ingId] ?? 'N/A';
             
             return Card(
               child: ListTile(
@@ -178,7 +170,7 @@ class PizzaDetailScreen extends StatelessWidget {
                       context,
                       pizzaId,
                       int.parse(ingId),
-                      refetch!,
+                      refetch,
                     );
                   },
                 ),
@@ -198,7 +190,7 @@ class PizzaDetailScreen extends StatelessWidget {
   }
 
   void _removeIngredient(
-      BuildContext context, int pizzaId, int ingredientId, Function refetch) {
+      BuildContext context, int pizzaId, int ingredientId, Function? refetch) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -214,7 +206,7 @@ class PizzaDetailScreen extends StatelessWidget {
               document: gql(PizzaMutations.removeIngredientFromPizza),
               onCompleted: (dynamic resultData) {
                 Navigator.pop(context);
-                refetch();
+                if (refetch != null) refetch();
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Ingrediente eliminado correctamente'),
@@ -296,7 +288,7 @@ class _AddIngredientDialogState extends State<AddIngredientDialog> {
 
               final ingredients = (result.data?['ingredientes'] as List<dynamic>?)
                   ?.map((ing) => Ingredient.fromJson(ing))
-                  .where((ing) => ing.state) // Solo ingredientes activos
+                  .where((ing) => ing.state)
                   .toList() ?? [];
 
               if (ingredients.isEmpty) {
@@ -344,15 +336,7 @@ class _AddIngredientDialogState extends State<AddIngredientDialog> {
             document: gql(PizzaMutations.assignIngredientToPizza),
             onCompleted: (dynamic resultData) {
               Navigator.pop(context);
-              // Refrescar la pantalla principal para mostrar el nuevo ingrediente
               Navigator.pop(context);
-              // Volver a cargar la pantalla actual
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => PizzaDetailScreen(pizzaId: widget.pizzaId),
-                ),
-              );
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Ingrediente agregado correctamente'),
@@ -394,21 +378,11 @@ class _AddIngredientDialogState extends State<AddIngredientDialog> {
                   return;
                 }
 
-                try {
-                  runMutation({
-                    'piz_id': widget.pizzaId.toString(),
-                    'ing_id': _selectedIngredientId.toString(),
-                    'piz_ing_quantified': quantity,
-                  });
-                } catch (e) {
-                  print('Error al ejecutar la mutación: $e');
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Error: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
+                runMutation({
+                  'piz_id': widget.pizzaId.toString(),
+                  'ing_id': _selectedIngredientId.toString(),
+                  'piz_ing_quantified': quantity,
+                });
               },
               child: const Text('Agregar'),
             );
