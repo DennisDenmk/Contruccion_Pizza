@@ -116,7 +116,7 @@ class _IngredientFormScreenState extends State<IngredientFormScreen> {
                     _showSuccess(isEditing
                         ? 'Ingrediente actualizado correctamente'
                         : 'Ingrediente creado correctamente');
-                    Navigator.pop(context);
+                    Navigator.pop(context, true);
                   },
                   onError: (error) {
                     setState(() => _isLoading = false);
@@ -160,7 +160,7 @@ class _IngredientFormScreenState extends State<IngredientFormScreen> {
                     document: gql(PizzaMutations.deleteIngredient),
                     onCompleted: (dynamic resultData) {
                       _showSuccess('Ingrediente eliminado correctamente');
-                      Navigator.pop(context);
+                      Navigator.pop(context, true); // Changed to return true
                     },
                     onError: (error) {
                       _showError(error?.graphqlErrors.first.message ??
